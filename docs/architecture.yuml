@@ -1,23 +1,56 @@
-# Avatar Destekli Dil Öğrenme Uygulaması - Backend Architecture (YUMLme Format)
+# 🎨 Suolingo Backend - Architecture Overview
+# YUMLme Class Diagram
 
-# Modeller ve İlişkiler
+# ==============================================
+# DATABASE MODELS (5 core models)
+# ==============================================
 
-[User|id:integer;name:string;email:string;password_digest:string;created_at:datetime;updated_at:datetime]
-[Avatar|id:integer;name:string;voice_id:string;personality:text;image_url:string;created_at:datetime;updated_at:datetime]
-[TargetLanguage|id:integer;name:string;code:string;created_at:datetime;updated_at:datetime]
-[Conversation|id:integer;title:string;difficulty_level:integer;target_language_id:integer;avatar_id:integer;created_at:datetime;updated_at:datetime]
-[Message|id:integer;content:text;sender_type:string;audio_url:string;conversation_id:integer;created_at:datetime;updated_at:datetime]
+[User|id;name;email;password_digest;level;xp]
+[Avatar|id;name;language;personality;voice_id;image_url]
+[LearningPath|id;title;description;difficulty_level;estimated_hours;is_published]
+[Conversation|id;title;difficulty_level;user_id;avatar_id;learning_path_id]
+[Message|id;content;sender_type;audio_url;conversation_id]
 
-# İlişkiler (Relationships)
+# ==============================================
+# MODEL RELATIONSHIPS
+# ==============================================
+
+[User]1-*[Conversation]
 [Avatar]1-*[Conversation]
-[TargetLanguage]1-*[Conversation]
+[LearningPath]1-*[Conversation]
 [Conversation]1-*[Message]
 
-# Notlar:
-# - User modeli standalone (authentication için)
-# - Avatar has_many :conversations
-# - TargetLanguage has_many :conversations  
-# - Conversation belongs_to :avatar, belongs_to :target_language, has_many :messages
-# - Message belongs_to :conversation
-# - sender_type: 'user' veya 'avatar'
-# - difficulty_level: 1-5 arası (beginner to advanced)
+# ==============================================
+# API LAYER (RESTful endpoints)
+# ==============================================
+
+[Rails API]<-[UsersController]
+[Rails API]<-[AvatarsController]
+[Rails API]<-[LearningPathsController]
+[Rails API]<-[ConversationsController]
+[Rails API]<-[MessagesController]
+
+[UsersController]->[User]
+[AvatarsController]->[Avatar]
+[LearningPathsController]->[LearningPath]
+[ConversationsController]->[Conversation]
+[MessagesController]->[Message]
+
+# ==============================================
+# TECH STACK
+# ==============================================
+
+[Client|Postman/Mobile App]-->[Rails 8.1.1 API]
+[Rails 8.1.1 API]-->[PostgreSQL 16]
+[Rails 8.1.1 API]-->[ActiveRecord ORM]
+
+# ==============================================
+# KEY FEATURES
+# ==============================================
+# ✅ 15 API endpoints (CRUD operations)
+# ✅ Nested resources (conversations/:id/messages)
+# ✅ JSON-only responses
+# ✅ PostgreSQL database
+# ✅ Comprehensive Postman tests
+# ✅ Seed data for development
+# ==============================================
