@@ -1,0 +1,853 @@
+openapi: 3.1.0
+info:
+  title: Avatar Destekli Dil Öğrenme API
+  description: |
+    Rails 8 API Backend for Avatar-based Language Learning Application
+    
+    ## Features
+    - User management with secure password authentication
+    - Avatar management for language tutors
+    - Target language configuration
+    - Conversation management with difficulty levels
+    - Message exchange between users and avatars
+    
+    ## Authentication
+    Currently, the API does not require authentication. JWT or session-based auth can be added later.
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@suolingo.com
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.suolingo.com
+    description: Production server
+
+tags:
+  - name: Users
+    description: User management operations
+  - name: Avatars
+    description: Avatar (language tutor) management
+  - name: Target Languages
+    description: Target language configuration
+  - name: Conversations
+    description: Learning conversation sessions
+  - name: Messages
+    description: Messages within conversations
+
+paths:
+  /users:
+    get:
+      tags:
+        - Users
+      summary: Get all users
+      description: Returns a list of all users
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      description: Creates a new user with secure password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user
+              properties:
+                user:
+                  type: object
+                  required:
+                    - name
+                    - email
+                    - password
+                    - password_confirmation
+                  properties:
+                    name:
+                      type: string
+                      example: "John Doe"
+                    email:
+                      type: string
+                      format: email
+                      example: "john@example.com"
+                    password:
+                      type: string
+                      format: password
+                      example: "password123"
+                    password_confirmation:
+                      type: string
+                      format: password
+                      example: "password123"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+    
+    put:
+      tags:
+        - Users
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          description: Validation error
+    
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+
+  /avatars:
+    get:
+      tags:
+        - Avatars
+      summary: Get all avatars
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Avatar'
+    
+    post:
+      tags:
+        - Avatars
+      summary: Create a new avatar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: object
+                  required:
+                    - name
+                    - voice_id
+                  properties:
+                    name:
+                      type: string
+                      example: "Sofia"
+                    voice_id:
+                      type: string
+                      example: "voice_en_us_001"
+                    personality:
+                      type: string
+                      example: "Friendly and patient language tutor"
+                    image_url:
+                      type: string
+                      format: uri
+                      example: "https://example.com/avatars/sofia.png"
+      responses:
+        '201':
+          description: Avatar created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+        '422':
+          description: Validation error
+
+  /avatars/{id}:
+    get:
+      tags:
+        - Avatars
+      summary: Get avatar by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+    
+    put:
+      tags:
+        - Avatars
+      summary: Update avatar
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    voice_id:
+                      type: string
+                    personality:
+                      type: string
+                    image_url:
+                      type: string
+                      format: uri
+      responses:
+        '200':
+          description: Avatar updated successfully
+    
+    delete:
+      tags:
+        - Avatars
+      summary: Delete avatar
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Avatar deleted successfully
+
+  /target_languages:
+    get:
+      tags:
+        - Target Languages
+      summary: Get all target languages
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TargetLanguage'
+    
+    post:
+      tags:
+        - Target Languages
+      summary: Create a new target language
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target_language
+              properties:
+                target_language:
+                  type: object
+                  required:
+                    - name
+                    - code
+                  properties:
+                    name:
+                      type: string
+                      example: "English"
+                    code:
+                      type: string
+                      example: "en-US"
+      responses:
+        '201':
+          description: Target language created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetLanguage'
+
+  /target_languages/{id}:
+    get:
+      tags:
+        - Target Languages
+      summary: Get target language by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetLanguage'
+    
+    put:
+      tags:
+        - Target Languages
+      summary: Update target language
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_language:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    code:
+                      type: string
+      responses:
+        '200':
+          description: Target language updated successfully
+    
+    delete:
+      tags:
+        - Target Languages
+      summary: Delete target language
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Target language deleted successfully
+
+  /conversations:
+    get:
+      tags:
+        - Conversations
+      summary: Get all conversations
+      description: Returns all conversations with associated avatar, target language, and messages
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConversationWithRelations'
+    
+    post:
+      tags:
+        - Conversations
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - conversation
+              properties:
+                conversation:
+                  type: object
+                  required:
+                    - title
+                    - difficulty_level
+                    - target_language_id
+                    - avatar_id
+                  properties:
+                    title:
+                      type: string
+                      example: "Ordering Food at a Restaurant"
+                    difficulty_level:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                      example: 2
+                      description: "1=Beginner, 2=Elementary, 3=Intermediate, 4=Upper Intermediate, 5=Advanced"
+                    target_language_id:
+                      type: integer
+                      example: 1
+                    avatar_id:
+                      type: integer
+                      example: 1
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+  /conversations/{id}:
+    get:
+      tags:
+        - Conversations
+      summary: Get conversation by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationWithRelations'
+    
+    put:
+      tags:
+        - Conversations
+      summary: Update conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversation:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    difficulty_level:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+      responses:
+        '200':
+          description: Conversation updated successfully
+    
+    delete:
+      tags:
+        - Conversations
+      summary: Delete conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Conversation deleted successfully
+
+  /conversations/{conversation_id}/messages:
+    get:
+      tags:
+        - Messages
+      summary: Get all messages in a conversation
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+    
+    post:
+      tags:
+        - Messages
+      summary: Create a new message
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: object
+                  required:
+                    - content
+                    - sender_type
+                  properties:
+                    content:
+                      type: string
+                      example: "Hello! I would like to order something."
+                    sender_type:
+                      type: string
+                      enum: [user, avatar]
+                      example: "user"
+                    audio_url:
+                      type: string
+                      format: uri
+                      example: "https://example.com/audio/message_001.mp3"
+      responses:
+        '201':
+          description: Message created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+  /conversations/{conversation_id}/messages/{id}:
+    get:
+      tags:
+        - Messages
+      summary: Get message by ID
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+    
+    put:
+      tags:
+        - Messages
+      summary: Update message
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: object
+                  properties:
+                    content:
+                      type: string
+                    audio_url:
+                      type: string
+                      format: uri
+      responses:
+        '200':
+          description: Message updated successfully
+    
+    delete:
+      tags:
+        - Messages
+      summary: Delete message
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Message deleted successfully
+
+  /:
+    get:
+      tags:
+        - Health
+      summary: API information
+      description: Returns basic API information and available endpoints
+      responses:
+        '200':
+          description: API info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api:
+                    type: string
+                  version:
+                    type: string
+                  endpoints:
+                    type: object
+
+  /up:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Verifies that the API is running
+      responses:
+        '200':
+          description: API is healthy
+        '500':
+          description: API has errors
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Avatar:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Sofia"
+        voice_id:
+          type: string
+          example: "voice_en_us_001"
+        personality:
+          type: string
+          example: "Friendly and patient language tutor"
+        image_url:
+          type: string
+          format: uri
+          example: "https://example.com/avatars/sofia.png"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TargetLanguage:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "English"
+        code:
+          type: string
+          example: "en-US"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Ordering Food at a Restaurant"
+        difficulty_level:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 2
+        target_language_id:
+          type: integer
+          example: 1
+        avatar_id:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ConversationWithRelations:
+      allOf:
+        - $ref: '#/components/schemas/Conversation'
+        - type: object
+          properties:
+            avatar:
+              $ref: '#/components/schemas/Avatar'
+            target_language:
+              $ref: '#/components/schemas/TargetLanguage'
+            messages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        content:
+          type: string
+          example: "Hello! I would like to order something."
+        sender_type:
+          type: string
+          enum: [user, avatar]
+          example: "user"
+        audio_url:
+          type: string
+          format: uri
+          example: "https://example.com/audio/message_001.mp3"
+        conversation_id:
+          type: integer
+          example: 1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

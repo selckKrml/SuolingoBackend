@@ -1,0 +1,23 @@
+# Avatar Destekli Dil Öğrenme Uygulaması - Backend Architecture (YUMLme Format)
+
+# Modeller ve İlişkiler
+
+[User|id:integer;name:string;email:string;password_digest:string;created_at:datetime;updated_at:datetime]
+[Avatar|id:integer;name:string;voice_id:string;personality:text;image_url:string;created_at:datetime;updated_at:datetime]
+[TargetLanguage|id:integer;name:string;code:string;created_at:datetime;updated_at:datetime]
+[Conversation|id:integer;title:string;difficulty_level:integer;target_language_id:integer;avatar_id:integer;created_at:datetime;updated_at:datetime]
+[Message|id:integer;content:text;sender_type:string;audio_url:string;conversation_id:integer;created_at:datetime;updated_at:datetime]
+
+# İlişkiler (Relationships)
+[Avatar]1-*[Conversation]
+[TargetLanguage]1-*[Conversation]
+[Conversation]1-*[Message]
+
+# Notlar:
+# - User modeli standalone (authentication için)
+# - Avatar has_many :conversations
+# - TargetLanguage has_many :conversations  
+# - Conversation belongs_to :avatar, belongs_to :target_language, has_many :messages
+# - Message belongs_to :conversation
+# - sender_type: 'user' veya 'avatar'
+# - difficulty_level: 1-5 arası (beginner to advanced)

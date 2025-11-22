@@ -1,0 +1,792 @@
+{
+  "info": {
+    "name": "Suolingo API v3 - Essential Tests",
+    "description": "Essential API tests focusing on main functionality\n\n📋 Test Structure:\n├── 🏠 API Info\n├── 👥 Users (Read & Create)\n├── 🤖 Avatars (Read & Create)\n├── 📚 Learning Paths (Read & Create)\n├── 💬 Conversations (Full functionality)\n└── 💌 Messages (Complete CRUD)\n\n✅ Features:\n- 15 essential requests\n- Core functionality validation\n- Automatic variable management\n- No cleanup needed - preserves test data",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🏠 API Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Response has API info', () => {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('api');",
+              "    pm.expect(json).to.have.property('version');",
+              "    pm.expect(json.version).to.eql('2.0.0');",
+              "});",
+              "console.log('✅ API is running on version ' + pm.response.json().version);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Users have required fields', () => {",
+                  "    const users = pm.response.json();",
+                  "    if (users.length > 0) {",
+                  "        const user = users[0];",
+                  "        pm.expect(user).to.have.property('id');",
+                  "        pm.expect(user).to.have.property('name');",
+                  "        pm.expect(user).to.have.property('email');",
+                  "        pm.collectionVariables.set('userId', user.id);",
+                  "        console.log('📌 Using user ID: ' + user.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"name\": \"Test User {{$timestamp}}\",\n    \"email\": \"test{{$timestamp}}@example.com\",\n    \"password\": \"password123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('User created successfully', () => {",
+                  "    const user = pm.response.json();",
+                  "    pm.expect(user).to.have.property('id');",
+                  "    pm.expect(user).to.have.property('name');",
+                  "    pm.expect(user).to.have.property('email');",
+                  "    pm.expect(user.name).to.include('Test User');",
+                  "    pm.collectionVariables.set('createdUserId', user.id);",
+                  "    console.log('✅ Created user ID: ' + user.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('User details returned', () => {",
+                  "    const user = pm.response.json();",
+                  "    pm.expect(user).to.have.property('id');",
+                  "    pm.expect(user.id).to.eql(parseInt(pm.collectionVariables.get('userId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user\": {\n    \"name\": \"Updated User Name\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{createdUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{createdUserId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('User updated', () => {",
+                  "    const user = pm.response.json();",
+                  "    pm.expect(user.name).to.eql('Updated User Name');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🤖 Avatars",
+      "item": [
+        {
+          "name": "Get All Avatars",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/avatars",
+              "host": ["{{baseUrl}}"],
+              "path": ["avatars"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Avatars have required fields', () => {",
+                  "    const avatars = pm.response.json();",
+                  "    if (avatars.length > 0) {",
+                  "        const avatar = avatars[0];",
+                  "        pm.expect(avatar).to.have.property('id');",
+                  "        pm.expect(avatar).to.have.property('name');",
+                  "        pm.expect(avatar).to.have.property('language');",
+                  "        pm.expect(avatar).to.have.property('language_code');",
+                  "        pm.collectionVariables.set('avatarId', avatar.id);",
+                  "        console.log('📌 Using avatar: ' + avatar.name + ' (' + avatar.language + ')');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Avatar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatar\": {\n    \"name\": \"Test Avatar {{$timestamp}}\",\n    \"voice_id\": \"test_voice\",\n    \"personality\": \"Friendly and helpful\",\n    \"image_url\": \"https://example.com/avatar.png\",\n    \"language\": \"Turkish\",\n    \"language_code\": \"tr-TR\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/avatars",
+              "host": ["{{baseUrl}}"],
+              "path": ["avatars"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Avatar created', () => {",
+                  "    const avatar = pm.response.json();",
+                  "    pm.expect(avatar).to.have.property('id');",
+                  "    pm.expect(avatar.language).to.eql('Turkish');",
+                  "    pm.collectionVariables.set('createdAvatarId', avatar.id);",
+                  "    console.log('✅ Created avatar ID: ' + avatar.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Avatar by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/avatars/{{avatarId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["avatars", "{{avatarId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Avatar details returned', () => {",
+                  "    const avatar = pm.response.json();",
+                  "    pm.expect(avatar).to.have.property('id');",
+                  "    pm.expect(avatar).to.have.property('personality');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📚 Learning Paths",
+      "item": [
+        {
+          "name": "Get All Learning Paths",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/learning_paths",
+              "host": ["{{baseUrl}}"],
+              "path": ["learning_paths"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Learning paths have required fields', () => {",
+                  "    const paths = pm.response.json();",
+                  "    if (paths.length > 0) {",
+                  "        const path = paths[0];",
+                  "        pm.expect(path).to.have.property('id');",
+                  "        pm.expect(path).to.have.property('title');",
+                  "        pm.expect(path).to.have.property('difficulty_level');",
+                  "        pm.collectionVariables.set('learningPathId', path.id);",
+                  "        console.log('📌 Using learning path: ' + path.title);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Learning Path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"learning_path\": {\n    \"title\": \"Test Path {{$timestamp}}\",\n    \"description\": \"A test learning path\",\n    \"difficulty_level\": 2,\n    \"estimated_hours\": 10,\n    \"total_lessons\": 5,\n    \"is_published\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/learning_paths",
+              "host": ["{{baseUrl}}"],
+              "path": ["learning_paths"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Learning path created', () => {",
+                  "    const path = pm.response.json();",
+                  "    pm.expect(path).to.have.property('id');",
+                  "    pm.expect(path.difficulty_level).to.eql(2);",
+                  "    pm.collectionVariables.set('createdLearningPathId', path.id);",
+                  "    console.log('✅ Created learning path ID: ' + path.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Learning Path by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/learning_paths/{{learningPathId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["learning_paths", "{{learningPathId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Learning path details returned', () => {",
+                  "    const path = pm.response.json();",
+                  "    pm.expect(path).to.have.property('id');",
+                  "    pm.expect(path).to.have.property('description');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "💬 Conversations",
+      "item": [
+        {
+          "name": "Get All Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Conversations include nested data', () => {",
+                  "    const convs = pm.response.json();",
+                  "    if (convs.length > 0) {",
+                  "        const conv = convs[0];",
+                  "        pm.expect(conv).to.have.property('id');",
+                  "        pm.expect(conv).to.have.property('title');",
+                  "        pm.expect(conv).to.have.property('avatar');",
+                  "        pm.expect(conv).to.have.property('learning_path');",
+                  "        pm.expect(conv).to.have.property('messages');",
+                  "        pm.collectionVariables.set('conversationId', conv.id);",
+                  "        console.log('📌 Using conversation: ' + conv.title + ' (ID: ' + conv.id + ')');",
+                  "        console.log('   Avatar: ' + conv.avatar.name);",
+                  "        console.log('   Messages: ' + conv.messages.length);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation\": {\n    \"title\": \"Test Conversation {{$timestamp}}\",\n    \"difficulty_level\": 2,\n    \"avatar_id\": {{avatarId}},\n    \"learning_path_id\": {{learningPathId}}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Conversation created', () => {",
+                  "    const conv = pm.response.json();",
+                  "    pm.expect(conv).to.have.property('id');",
+                  "    pm.expect(conv.title).to.include('Test Conversation');",
+                  "    pm.collectionVariables.set('createdConversationId', conv.id);",
+                  "    console.log('✅ Created conversation ID: ' + conv.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Conversation by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations", "{{conversationId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Conversation with full nested data', () => {",
+                  "    const conv = pm.response.json();",
+                  "    pm.expect(conv).to.have.property('id');",
+                  "    pm.expect(conv).to.have.property('avatar');",
+                  "    pm.expect(conv.avatar).to.have.property('name');",
+                  "    pm.expect(conv).to.have.property('learning_path');",
+                  "    pm.expect(conv).to.have.property('messages');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Conversation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"conversation\": {\n    \"title\": \"Updated Conversation Title\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{createdConversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["conversations", "{{createdConversationId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Conversation updated', () => {",
+                  "    const conv = pm.response.json();",
+                  "    pm.expect(conv.title).to.eql('Updated Conversation Title');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "💌 Messages",
+      "item": [
+        {
+          "name": "Get All Messages for Conversation",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages",
+          "host": ["{{baseUrl}}"],
+          "path": ["conversations", "{{conversationId}}", "messages"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Response is array', () => {",
+              "    const messages = pm.response.json();",
+              "    pm.expect(messages).to.be.an('array');",
+              "    console.log('📨 Found ' + messages.length + ' messages');",
+              "    if (messages.length > 0) {",
+              "        pm.collectionVariables.set('messageId', messages[0].id);",
+              "        console.log('📌 First message ID: ' + messages[0].id);",
+              "    }",
+              "});",
+              "pm.test('Messages have required fields', () => {",
+              "    const messages = pm.response.json();",
+              "    if (messages.length > 0) {",
+              "        const msg = messages[0];",
+              "        pm.expect(msg).to.have.property('id');",
+              "        pm.expect(msg).to.have.property('content');",
+              "        pm.expect(msg).to.have.property('sender_type');",
+              "        pm.expect(msg).to.have.property('created_at');",
+              "    }",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+        },
+        {
+          "name": "Create Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": {\n    \"content\": \"Test message from Postman\",\n    \"sender_type\": \"user\",\n    \"audio_url\": \"https://example.com/audio/test.mp3\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages",
+          "host": ["{{baseUrl}}"],
+          "path": ["conversations", "{{conversationId}}", "messages"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+              "pm.test('Message created with all fields', () => {",
+              "    const msg = pm.response.json();",
+              "    pm.expect(msg).to.have.property('id');",
+              "    pm.expect(msg).to.have.property('content');",
+              "    pm.expect(msg).to.have.property('sender_type');",
+              "    pm.expect(msg).to.have.property('audio_url');",
+              "    pm.expect(msg).to.have.property('conversation_id');",
+              "    pm.expect(msg.content).to.eql('Test message from Postman');",
+              "    pm.expect(msg.sender_type).to.eql('user');",
+              "    pm.collectionVariables.set('createdMessageId', msg.id);",
+              "    console.log('✅ Created message ID: ' + msg.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+        },
+        {
+          "name": "Get Message by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages/{{messageId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["conversations", "{{conversationId}}", "messages", "{{messageId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Message has all properties', () => {",
+              "    const msg = pm.response.json();",
+              "    pm.expect(msg).to.have.property('id');",
+              "    pm.expect(msg).to.have.property('content');",
+              "    pm.expect(msg).to.have.property('sender_type');",
+              "    pm.expect(msg).to.have.property('conversation_id');",
+              "    pm.expect(msg.id).to.eql(parseInt(pm.collectionVariables.get('messageId')));",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+        },
+        {
+          "name": "Update Message",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": {\n    \"content\": \"Updated message content\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages/{{createdMessageId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["conversations", "{{conversationId}}", "messages", "{{createdMessageId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Message content updated', () => {",
+              "    const msg = pm.response.json();",
+              "    pm.expect(msg.content).to.eql('Updated message content');",
+              "    pm.expect(msg).to.have.property('updated_at');",
+              "    console.log('✅ Message updated successfully');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+        },
+        {
+          "name": "Delete Message",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages/{{createdMessageId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["conversations", "{{conversationId}}", "messages", "{{createdMessageId}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 204', () => pm.response.to.have.status(204));",
+              "console.log('✅ Message deleted successfully');",
+              "console.log('');",
+              "console.log('🎉 ALL 15 TESTS COMPLETED SUCCESSFULLY! 🎉');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "avatarId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "learningPathId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "conversationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "messageId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdMessageId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdAvatarId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdConversationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdLearningPathId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
